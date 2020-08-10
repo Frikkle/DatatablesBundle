@@ -11,9 +11,12 @@
 
 namespace Sg\DatatablesBundle\Command;
 
+use Doctrine\Bundle\DoctrineBundle\Mapping\DisconnectedMetadataFactory;
+use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
+use Symfony\Component\Console\Exception\LogicException;
 use Doctrine\ORM\Mapping\ClassMetadataInfo;
 use Exception;
-use Sensio\Bundle\GeneratorBundle\Command\GenerateDoctrineCommand;
+use Sensio\Bundle\GeneratorBundle\Generator\Generator;
 use Sensio\Bundle\GeneratorBundle\Command\Validators;
 use Sg\DatatablesBundle\Generator\DatatableGenerator;
 use Symfony\Component\Console\Input\InputArgument;
@@ -22,8 +25,13 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 
-class CreateDatatableCommand extends GenerateDoctrineCommand
+class CreateDatatableCommand extends ContainerAwareCommand
 {
+    /**
+     * @var Generator
+     */
+    private $generator;
+
     //-------------------------------------------------
     // The 'sg:datatable:generate' Command
     //-------------------------------------------------
@@ -48,6 +56,10 @@ class CreateDatatableCommand extends GenerateDoctrineCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        if (!\class_exists('\Sensio\Bundle\GeneratorBundle\SensioGeneratorBundle')) {
+            throw new LogicException('You need to install SensioGeneratorBundle to use this command');
+        }
+
         // get entity argument
         $entity = Validators::validateEntityName($input->getArgument('entity'));
         list($bundle, $entity) = $this->parseShortcutNotation($entity);
@@ -82,12 +94,40 @@ class CreateDatatableCommand extends GenerateDoctrineCommand
         );
     }
 
+    protected function parseShortcutNotation($shortcut)
+    {
+        $entity = str_replace('/', '\\', $shortcut);
+
+        if (false === $pos = strpos($entity, ':')) {
+            throw new \InvalidArgumentException(sprintf('The entity name must contain a : ("%s" given, expecting something like AcmeBlogBundle:Blog/Post)', $entity));
+        }
+
+        return array(substr($entity, 0, $pos), substr($entity, $pos + 1));
+    }
+
+    protected function getEntityMetadata($entity)
+    {
+        $factory = new DisconnectedMetadataFactory($this->getContainer()->get('doctrine'));
+
+        return $factory->getClassMetadata($entity)->getMetadata();
+    }
+
+    protected function getGenerator(BundleInterface $bundle = null)
+    {
+        if (null === $this->generator) {
+            $this->generator = $this->createGenerator();
+            $this->generator->setSkeletonDirs($this->getSkeletonDirs($bundle));
+        }
+
+        return $this->generator;
+    }
+
     /**
      * {@inheritdoc}
      */
     protected function createGenerator()
     {
-        return new DatatableGenerator($this->getContainer()->get('filesystem'));
+        return new DatatableGenerator();
     }
 
     /**

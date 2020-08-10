@@ -1,5 +1,5 @@
 {
-    "name": "sg/datatablesbundle",
+    "name": "northchain/datatablesbundle",
     "type": "symfony-bundle",
     "description": "Symfony Datatable Bundle For Doctrine2 Entities",
     "keywords": ["symfony3", "datatable", "datatables", "data-table", "grid", "table", "datagrid", "pagination"],
@@ -7,11 +7,18 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "stwe"
+            "name": "Gabe van der Weijde",
+            "email": "gabe.vanderweijde@northchain.tech",
+            "homepage": "https://northchain.tech",
+            "role": "Deloper"
+        },
+        {
+            "name": "stwe",
+            "role": "Original Developer"
         },
         {
             "name": "SgDatatablesBundle contributors",
-            "homepage": "https://github.com/stwe/DatatablesBundle/graphs/contributors"
+            "homepage": "https://github.com/stwe/DatatablesBundle/graphs/contributors",
         }
     ],
     "support": {
